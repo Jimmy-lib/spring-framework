@@ -16,16 +16,15 @@
 
 package org.springframework.orm.jpa.support;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceContextType;
-import javax.persistence.SynchronizationType;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.PersistenceContextType;
+import jakarta.persistence.SynchronizationType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.lang.Nullable;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -56,7 +55,7 @@ public class PersistenceContextTransactionTests {
 	private EntityManagerHoldingBean bean;
 
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		factory = mock(EntityManagerFactory.class);
 		manager = mock(EntityManager.class);
@@ -83,7 +82,7 @@ public class PersistenceContextTransactionTests {
 		assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isFalse();
 	}
 
-	@After
+	@AfterEach
 	public void clear() {
 		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty()).isTrue();
 		assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isFalse();

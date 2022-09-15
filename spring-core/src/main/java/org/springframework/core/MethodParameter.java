@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,12 +26,11 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
+import kotlin.Unit;
 import kotlin.reflect.KFunction;
 import kotlin.reflect.KParameter;
 import kotlin.reflect.jvm.ReflectJvmMapping;
@@ -398,7 +397,7 @@ public class MethodParameter {
 	 * either in the form of Java 8's {@link java.util.Optional}, any variant
 	 * of a parameter-level {@code Nullable} annotation (such as from JSR-305
 	 * or the FindBugs set of annotations), or a language-level nullable type
-	 * declaration in Kotlin.
+	 * declaration or {@code Continuation} parameter in Kotlin.
 	 * @since 4.3
 	 */
 	public boolean isOptional() {
@@ -410,7 +409,7 @@ public class MethodParameter {
 
 	/**
 	 * Check whether this method parameter is annotated with any variant of a
-	 * {@code Nullable} annotation, e.g. {@code javax.annotation.Nullable} or
+	 * {@code Nullable} annotation, e.g. {@code jakarta.annotation.Nullable} or
 	 * {@code edu.umd.cs.findbugs.annotations.Nullable}.
 	 */
 	private boolean hasNullableAnnotation() {
@@ -486,7 +485,9 @@ public class MethodParameter {
 		if (paramType != null) {
 			return paramType;
 		}
-		paramType = ResolvableType.forMethodParameter(this, null, 1).resolve();
+		if (getContainingClass() != getDeclaringClass()) {
+			paramType = ResolvableType.forMethodParameter(this, null, 1).resolve();
+		}
 		if (paramType == null) {
 			paramType = computeParameterType();
 		}
@@ -551,20 +552,20 @@ public class MethodParameter {
 		if (this.nestingLevel > 1) {
 			Type type = getGenericParameterType();
 			for (int i = 2; i <= this.nestingLevel; i++) {
-				if (type instanceof ParameterizedType) {
-					Type[] args = ((ParameterizedType) type).getActualTypeArguments();
+				if (type instanceof ParameterizedType parameterizedType) {
+					Type[] args = parameterizedType.getActualTypeArguments();
 					Integer index = getTypeIndexForLevel(i);
 					type = args[index != null ? index : args.length - 1];
 				}
 				// TODO: Object.class if unresolvable
 			}
-			if (type instanceof Class) {
-				return (Class<?>) type;
+			if (type instanceof Class<?> clazz) {
+				return clazz;
 			}
-			else if (type instanceof ParameterizedType) {
-				Type arg = ((ParameterizedType) type).getRawType();
-				if (arg instanceof Class) {
-					return (Class<?>) arg;
+			else if (type instanceof ParameterizedType parameterizedType) {
+				Type arg = parameterizedType.getRawType();
+				if (arg instanceof Class<?> clazz) {
+					return clazz;
 				}
 			}
 			return Object.class;
@@ -584,8 +585,8 @@ public class MethodParameter {
 		if (this.nestingLevel > 1) {
 			Type type = getGenericParameterType();
 			for (int i = 2; i <= this.nestingLevel; i++) {
-				if (type instanceof ParameterizedType) {
-					Type[] args = ((ParameterizedType) type).getActualTypeArguments();
+				if (type instanceof ParameterizedType parameterizedType) {
+					Type[] args = parameterizedType.getActualTypeArguments();
 					Integer index = getTypeIndexForLevel(i);
 					type = args[index != null ? index : args.length - 1];
 				}
@@ -707,11 +708,11 @@ public class MethodParameter {
 		ParameterNameDiscoverer discoverer = this.parameterNameDiscoverer;
 		if (discoverer != null) {
 			String[] parameterNames = null;
-			if (this.executable instanceof Method) {
-				parameterNames = discoverer.getParameterNames((Method) this.executable);
+			if (this.executable instanceof Method method) {
+				parameterNames = discoverer.getParameterNames(method);
 			}
-			else if (this.executable instanceof Constructor) {
-				parameterNames = discoverer.getParameterNames((Constructor<?>) this.executable);
+			else if (this.executable instanceof Constructor<?> constructor) {
+				parameterNames = discoverer.getParameterNames(constructor);
 			}
 			if (parameterNames != null) {
 				this.parameterName = parameterNames[this.parameterIndex];
@@ -752,10 +753,9 @@ public class MethodParameter {
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof MethodParameter)) {
+		if (!(other instanceof MethodParameter otherParam)) {
 			return false;
 		}
-		MethodParameter otherParam = (MethodParameter) other;
 		return (getContainingClass() == otherParam.getContainingClass() &&
 				ObjectUtils.nullSafeEquals(this.typeIndexesPerLevel, otherParam.typeIndexesPerLevel) &&
 				this.nestingLevel == otherParam.nestingLevel &&
@@ -791,11 +791,11 @@ public class MethodParameter {
 	 */
 	@Deprecated
 	public static MethodParameter forMethodOrConstructor(Object methodOrConstructor, int parameterIndex) {
-		if (!(methodOrConstructor instanceof Executable)) {
+		if (!(methodOrConstructor instanceof Executable executable)) {
 			throw new IllegalArgumentException(
 					"Given object [" + methodOrConstructor + "] is neither a Method nor a Constructor");
 		}
-		return forExecutable((Executable) methodOrConstructor, parameterIndex);
+		return forExecutable(executable, parameterIndex);
 	}
 
 	/**
@@ -808,11 +808,11 @@ public class MethodParameter {
 	 * @since 5.0
 	 */
 	public static MethodParameter forExecutable(Executable executable, int parameterIndex) {
-		if (executable instanceof Method) {
-			return new MethodParameter((Method) executable, parameterIndex);
+		if (executable instanceof Method method) {
+			return new MethodParameter(method, parameterIndex);
 		}
-		else if (executable instanceof Constructor) {
-			return new MethodParameter((Constructor<?>) executable, parameterIndex);
+		else if (executable instanceof Constructor<?> constructor) {
+			return new MethodParameter(constructor, parameterIndex);
 		}
 		else {
 			throw new IllegalArgumentException("Not a Method/Constructor: " + executable);
@@ -865,37 +865,41 @@ public class MethodParameter {
 	private static class KotlinDelegate {
 
 		/**
-		 * Check whether the specified {@link MethodParameter} represents a nullable Kotlin type
-		 * or an optional parameter (with a default value in the Kotlin declaration).
+		 * Check whether the specified {@link MethodParameter} represents a nullable Kotlin type,
+		 * an optional parameter (with a default value in the Kotlin declaration) or a
+		 * {@code Continuation} parameter used in suspending functions.
 		 */
 		public static boolean isOptional(MethodParameter param) {
 			Method method = param.getMethod();
-			Constructor<?> ctor = param.getConstructor();
 			int index = param.getParameterIndex();
 			if (method != null && index == -1) {
 				KFunction<?> function = ReflectJvmMapping.getKotlinFunction(method);
 				return (function != null && function.getReturnType().isMarkedNullable());
 			}
+			KFunction<?> function;
+			Predicate<KParameter> predicate;
+			if (method != null) {
+				if (param.getParameterType().getName().equals("kotlin.coroutines.Continuation")) {
+					return true;
+				}
+				function = ReflectJvmMapping.getKotlinFunction(method);
+				predicate = p -> KParameter.Kind.VALUE.equals(p.getKind());
+			}
 			else {
-				KFunction<?> function = null;
-				Predicate<KParameter> predicate = null;
-				if (method != null) {
-					function = ReflectJvmMapping.getKotlinFunction(method);
-					predicate = p -> KParameter.Kind.VALUE.equals(p.getKind());
-				}
-				else if (ctor != null) {
-					function = ReflectJvmMapping.getKotlinFunction(ctor);
-					predicate = p -> KParameter.Kind.VALUE.equals(p.getKind()) ||
-							KParameter.Kind.INSTANCE.equals(p.getKind());
-				}
-				if (function != null) {
-					List<KParameter> parameters = function.getParameters();
-					KParameter parameter = parameters
-							.stream()
-							.filter(predicate)
-							.collect(Collectors.toList())
-							.get(index);
-					return (parameter.getType().isMarkedNullable() || parameter.isOptional());
+				Constructor<?> ctor = param.getConstructor();
+				Assert.state(ctor != null, "Neither method nor constructor found");
+				function = ReflectJvmMapping.getKotlinFunction(ctor);
+				predicate = p -> (KParameter.Kind.VALUE.equals(p.getKind()) ||
+						KParameter.Kind.INSTANCE.equals(p.getKind()));
+			}
+			if (function != null) {
+				int i = 0;
+				for (KParameter kParameter : function.getParameters()) {
+					if (predicate.test(kParameter)) {
+						if (index == i++) {
+							return (kParameter.getType().isMarkedNullable() || kParameter.isOptional());
+						}
+					}
 				}
 			}
 			return false;
@@ -905,10 +909,15 @@ public class MethodParameter {
 		 * Return the generic return type of the method, with support of suspending
 		 * functions via Kotlin reflection.
 		 */
-		static private Type getGenericReturnType(Method method) {
-			KFunction<?> function = ReflectJvmMapping.getKotlinFunction(method);
-			if (function != null && function.isSuspend()) {
-				return ReflectJvmMapping.getJavaType(function.getReturnType());
+		private static Type getGenericReturnType(Method method) {
+			try {
+				KFunction<?> function = ReflectJvmMapping.getKotlinFunction(method);
+				if (function != null && function.isSuspend()) {
+					return ReflectJvmMapping.getJavaType(function.getReturnType());
+				}
+			}
+			catch (UnsupportedOperationException ex) {
+				// probably a synthetic class - let's use java reflection instead
 			}
 			return method.getGenericReturnType();
 		}
@@ -917,11 +926,19 @@ public class MethodParameter {
 		 * Return the return type of the method, with support of suspending
 		 * functions via Kotlin reflection.
 		 */
-		static private Class<?> getReturnType(Method method) {
-			KFunction<?> function = ReflectJvmMapping.getKotlinFunction(method);
-			if (function != null && function.isSuspend()) {
-				Type paramType = ReflectJvmMapping.getJavaType(function.getReturnType());
-				return ResolvableType.forType(paramType).resolve(method.getReturnType());
+		private static Class<?> getReturnType(Method method) {
+			try {
+				KFunction<?> function = ReflectJvmMapping.getKotlinFunction(method);
+				if (function != null && function.isSuspend()) {
+					Type paramType = ReflectJvmMapping.getJavaType(function.getReturnType());
+					if (paramType == Unit.class) {
+						paramType = void.class;
+					}
+					return ResolvableType.forType(paramType).resolve(method.getReturnType());
+				}
+			}
+			catch (UnsupportedOperationException ex) {
+				// probably a synthetic class - let's use java reflection instead
 			}
 			return method.getReturnType();
 		}

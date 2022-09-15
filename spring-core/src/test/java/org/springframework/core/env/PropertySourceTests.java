@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 
 /**
  * Unit tests for {@link PropertySource} implementations.
@@ -33,15 +32,15 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Chris Beams
  * @since 3.1
  */
-public class PropertySourceTests {
+class PropertySourceTests {
 
 	@Test
 	@SuppressWarnings("serial")
-	public void equals() {
-		Map<String, Object> map1 = new HashMap<String, Object>() {{
+	void equals() {
+		Map<String, Object> map1 = new HashMap<>() {{
 			put("a", "b");
 		}};
-		Map<String, Object> map2 = new HashMap<String, Object>() {{
+		Map<String, Object> map2 = new HashMap<>() {{
 			put("c", "d");
 		}};
 		Properties props1 = new Properties() {{
@@ -69,18 +68,18 @@ public class PropertySourceTests {
 
 	@Test
 	@SuppressWarnings("serial")
-	public void collectionsOperations() {
-		Map<String, Object> map1 = new HashMap<String, Object>() {{
+	void collectionsOperations() {
+		Map<String, Object> map1 = new HashMap<>() {{
 			put("a", "b");
 		}};
-		Map<String, Object> map2 = new HashMap<String, Object>() {{
+		Map<String, Object> map2 = new HashMap<>() {{
 			put("c", "d");
 		}};
 
 		PropertySource<?> ps1 = new MapPropertySource("ps1", map1);
 		ps1.getSource();
 		List<PropertySource<?>> propertySources = new ArrayList<>();
-		assertThat(propertySources.add(ps1)).isEqualTo(true);
+		assertThat(propertySources.add(ps1)).isTrue();
 		assertThat(propertySources.contains(ps1)).isTrue();
 		assertThat(propertySources.contains(PropertySource.named("ps1"))).isTrue();
 

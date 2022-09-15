@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package org.springframework.test.context.cache;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -27,7 +27,6 @@ import org.springframework.test.context.MergedContextConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.mockito.Mockito.mock;
@@ -42,7 +41,7 @@ import static org.mockito.Mockito.verify;
  * @since 4.3
  * @see ContextCacheTests
  */
-public class LruContextCacheTests {
+class LruContextCacheTests {
 
 	private static final MergedContextConfiguration abcConfig = config(Abc.class);
 	private static final MergedContextConfiguration fooConfig = config(Foo.class);
@@ -57,19 +56,17 @@ public class LruContextCacheTests {
 
 
 	@Test
-	public void maxCacheSizeNegativeOne() {
-		assertThatIllegalArgumentException().isThrownBy(() ->
-				new DefaultContextCache(-1));
+	void maxCacheSizeNegativeOne() {
+		assertThatIllegalArgumentException().isThrownBy(() -> new DefaultContextCache(-1));
 	}
 
 	@Test
-	public void maxCacheSizeZero() {
-		assertThatIllegalArgumentException().isThrownBy(() ->
-				new DefaultContextCache(0));
+	void maxCacheSizeZero() {
+		assertThatIllegalArgumentException().isThrownBy(() -> new DefaultContextCache(0));
 	}
 
 	@Test
-	public void maxCacheSizeOne() {
+	void maxCacheSizeOne() {
 		DefaultContextCache cache = new DefaultContextCache(1);
 		assertThat(cache.size()).isEqualTo(0);
 		assertThat(cache.getMaxSize()).isEqualTo(1);
@@ -88,7 +85,7 @@ public class LruContextCacheTests {
 	}
 
 	@Test
-	public void maxCacheSizeThree() {
+	void maxCacheSizeThree() {
 		DefaultContextCache cache = new DefaultContextCache(3);
 		assertThat(cache.size()).isEqualTo(0);
 		assertThat(cache.getMaxSize()).isEqualTo(3);
@@ -110,7 +107,7 @@ public class LruContextCacheTests {
 	}
 
 	@Test
-	public void ensureLruOrderingIsUpdated() {
+	void ensureLruOrderingIsUpdated() {
 		DefaultContextCache cache = new DefaultContextCache(3);
 
 		// Note: when a new entry is added it is considered the MRU entry and inserted at the tail.
@@ -134,7 +131,7 @@ public class LruContextCacheTests {
 	}
 
 	@Test
-	public void ensureEvictedContextsAreClosed() {
+	void ensureEvictedContextsAreClosed() {
 		DefaultContextCache cache = new DefaultContextCache(2);
 
 		cache.put(fooConfig, fooContext);
@@ -168,7 +165,7 @@ public class LruContextCacheTests {
 		List<String> actualNames = contextMap.keySet().stream()
 			.map(cfg -> cfg.getClasses()[0])
 			.map(Class::getSimpleName)
-			.collect(toList());
+			.toList();
 		// @formatter:on
 
 		assertThat(actualNames).isEqualTo(asList(expectedNames));

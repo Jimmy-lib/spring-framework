@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,26 +17,31 @@
 package org.springframework.web.reactive.result.method.annotation
 
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatExceptionOfType
+import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.reactive.config.EnableWebFlux
+import org.springframework.web.testfixture.http.server.reactive.bootstrap.HttpServer
+import org.springframework.web.testfixture.http.server.reactive.bootstrap.UndertowHttpServer
+import reactor.core.publisher.Flux
+import java.time.Duration
 
-@ExperimentalCoroutinesApi
 class CoroutinesIntegrationTests : AbstractRequestMappingIntegrationTests() {
 
 	override fun initApplicationContext(): ApplicationContext {
@@ -46,49 +51,97 @@ class CoroutinesIntegrationTests : AbstractRequestMappingIntegrationTests() {
 		return context
 	}
 
-	@Test
-	fun `Suspending handler method`() {
+
+	@ParameterizedHttpServerTest
+	fun `Suspending handler method`(httpServer: HttpServer) {
+		startServer(httpServer)
+
 		val entity = performGet<String>("/suspend", HttpHeaders.EMPTY, String::class.java)
-		assertEquals(HttpStatus.OK, entity.statusCode)
-		assertEquals("foo", entity.body)
+		assertThat(entity.statusCode).isEqualTo(HttpStatus.OK)
+		assertThat(entity.body).isEqualTo("foo")
 	}
 
-	@Test
-	fun `Handler method returning Deferred`() {
+	@ParameterizedHttpServerTest
+	fun `Handler method returning Deferred`(httpServer: HttpServer) {
+		startServer(httpServer)
+
 		val entity = performGet<String>("/deferred", HttpHeaders.EMPTY, String::class.java)
-		assertEquals(HttpStatus.OK, entity.statusCode)
-		assertEquals("foo", entity.body)
+		assertThat(entity.statusCode).isEqualTo(HttpStatus.OK)
+		assertThat(entity.body).isEqualTo("foo")
 	}
 
-	@Test
-	fun `Handler method returning Flow`() {
+	@ParameterizedHttpServerTest  // gh-27292
+	fun `Suspending ResponseEntity handler method`(httpServer: HttpServer) {
+		startServer(httpServer)
+
+		val entity = performGet<String>("/suspend-response-entity", HttpHeaders.EMPTY, String::class.java)
+		assertThat(entity.statusCode).isEqualTo(HttpStatus.OK)
+		assertThat(entity.body).isEqualTo("{\"value\":\"foo\"}")
+	}
+
+	@ParameterizedHttpServerTest
+	fun `Handler method returning Flow`(httpServer: HttpServer) {
+		startServer(httpServer)
+
 		val entity = performGet<String>("/flow", HttpHeaders.EMPTY, String::class.java)
-		assertEquals(HttpStatus.OK, entity.statusCode)
-		assertEquals("foobar", entity.body)
+		assertThat(entity.statusCode).isEqualTo(HttpStatus.OK)
+		assertThat(entity.body).isEqualTo("foobar")
 	}
 
-	@Test
-	fun `Suspending handler method returning Flow`() {
+	@ParameterizedHttpServerTest
+	fun `Suspending handler method returning Flow`(httpServer: HttpServer) {
+		startServer(httpServer)
+
 		val entity = performGet<String>("/suspending-flow", HttpHeaders.EMPTY, String::class.java)
-		assertEquals(HttpStatus.OK, entity.statusCode)
-		assertEquals("foobar", entity.body)
+		assertThat(entity.statusCode).isEqualTo(HttpStatus.OK)
+		assertThat(entity.body).isEqualTo("foobar")
 	}
 
-	@Test(expected = HttpServerErrorException.InternalServerError::class)
-	fun `Suspending handler method throwing exception`() {
-		performGet<String>("/error", HttpHeaders.EMPTY, String::class.java)
+	@ParameterizedHttpServerTest
+	fun `Suspending handler method throwing exception`(httpServer: HttpServer) {
+		startServer(httpServer)
+
+		assertThatExceptionOfType(HttpServerErrorException.InternalServerError::class.java).isThrownBy {
+			performGet<String>("/error", HttpHeaders.EMPTY, String::class.java)
+		}
 	}
 
-	@Test(expected = HttpServerErrorException.InternalServerError::class)
-	fun `Handler method returning Flow throwing exception`() {
-		performGet<String>("/flow-error", HttpHeaders.EMPTY, String::class.java)
+	@ParameterizedHttpServerTest
+	fun `Handler method returning Flow throwing exception`(httpServer: HttpServer) {
+		startServer(httpServer)
+
+		assertThatExceptionOfType(HttpServerErrorException.InternalServerError::class.java).isThrownBy {
+			performGet<String>("/flow-error", HttpHeaders.EMPTY, String::class.java)
+		}
 	}
+
+	@ParameterizedHttpServerTest
+	fun `Suspending handler method returning ResponseEntity of Flux `(httpServer: HttpServer) {
+		assumeFalse(httpServer is UndertowHttpServer, "Undertow currently fails")
+
+		startServer(httpServer)
+
+		val entity = performGet<String>("/entity-flux", HttpHeaders.EMPTY, String::class.java)
+		assertThat(entity.statusCode).isEqualTo(HttpStatus.OK)
+		assertThat(entity.body).isEqualTo("01234")
+	}
+
+	@ParameterizedHttpServerTest
+	fun `Suspending handler method returning ResponseEntity of Flow`(httpServer: HttpServer) {
+		startServer(httpServer)
+
+		val entity = performGet<String>("/entity-flow", HttpHeaders.EMPTY, String::class.java)
+		assertThat(entity.statusCode).isEqualTo(HttpStatus.OK)
+		assertThat(entity.body).isEqualTo("foobar")
+	}
+
 
 	@Configuration
 	@EnableWebFlux
 	@ComponentScan(resourcePattern = "**/CoroutinesIntegrationTests*")
 	open class WebConfig
 
+	@OptIn(DelicateCoroutinesApi::class)
 	@RestController
 	class CoroutinesController {
 
@@ -102,6 +155,12 @@ class CoroutinesIntegrationTests : AbstractRequestMappingIntegrationTests() {
 		fun deferredEndpoint(): Deferred<String> = GlobalScope.async {
 			delay(1)
 			"foo"
+		}
+
+		@GetMapping("/suspend-response-entity")
+		suspend fun suspendingResponseEntityEndpoint(): ResponseEntity<FooContainer<String>> {
+			delay(1)
+			return ResponseEntity.ok(FooContainer("foo"))
 		}
 
 		@GetMapping("/flow")
@@ -135,5 +194,28 @@ class CoroutinesIntegrationTests : AbstractRequestMappingIntegrationTests() {
 			throw IllegalStateException()
 		}
 
+		@GetMapping("/entity-flux")
+		suspend fun entityFlux() : ResponseEntity<Flux<String>> {
+			val strings = Flux.interval(Duration.ofMillis(100)).take(5)
+					.map { l -> l.toString() }
+			delay(1)
+			return ResponseEntity.ok().body(strings)
+		}
+
+		@GetMapping("/entity-flow")
+		suspend fun entityFlow() : ResponseEntity<Flow<String>> {
+			val strings =  flow {
+							emit("foo")
+							delay(1)
+							emit("bar")
+							delay(1)
+						}
+			return ResponseEntity.ok().body(strings)
+		}
+
 	}
+
+
+	class FooContainer<T>(val value: T)
+
 }

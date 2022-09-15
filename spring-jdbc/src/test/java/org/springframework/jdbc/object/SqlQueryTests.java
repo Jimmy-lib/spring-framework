@@ -27,10 +27,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.sql.DataSource;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -90,7 +91,7 @@ public class SqlQueryTests  {
 	private ResultSet resultSet;
 
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		this.connection = mock(Connection.class);
 		this.dataSource = mock(DataSource.class);
@@ -106,7 +107,7 @@ public class SqlQueryTests  {
 		given(resultSet.next()).willReturn(true, false);
 		given(resultSet.getInt(1)).willReturn(1);
 
-		SqlQuery<Integer> query = new MappingSqlQueryWithParameters<Integer>() {
+		SqlQuery<Integer> query = new MappingSqlQueryWithParameters<>() {
 			@Override
 			protected Integer mapRow(ResultSet rs, int rownum, @Nullable Object[] params, @Nullable Map<? ,?> context)
 					throws SQLException {
@@ -128,7 +129,7 @@ public class SqlQueryTests  {
 
 	@Test
 	public void testQueryWithoutEnoughParams() {
-		MappingSqlQuery<Integer> query = new MappingSqlQuery<Integer>() {
+		MappingSqlQuery<Integer> query = new MappingSqlQuery<>() {
 			@Override
 			protected Integer mapRow(ResultSet rs, int rownum) throws SQLException {
 				return rs.getInt(1);
@@ -146,7 +147,7 @@ public class SqlQueryTests  {
 
 	@Test
 	public void testQueryWithMissingMapParams() {
-		MappingSqlQuery<Integer> query = new MappingSqlQuery<Integer>() {
+		MappingSqlQuery<Integer> query = new MappingSqlQuery<>() {
 			@Override
 			protected Integer mapRow(ResultSet rs, int rownum) throws SQLException {
 				return rs.getInt(1);

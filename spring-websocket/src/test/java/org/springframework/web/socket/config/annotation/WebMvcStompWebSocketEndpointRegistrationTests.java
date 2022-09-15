@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.SubscribableChannel;
@@ -55,7 +55,7 @@ public class WebMvcStompWebSocketEndpointRegistrationTests {
 	private TaskScheduler scheduler;
 
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.handler = new SubProtocolWebSocketHandler(mock(MessageChannel.class), mock(SubscribableChannel.class));
 		this.scheduler = mock(TaskScheduler.class);
@@ -135,12 +135,38 @@ public class WebMvcStompWebSocketEndpointRegistrationTests {
 		assertThat(sockJsService.shouldSuppressCors()).isFalse();
 	}
 
+	@Test
+	public void allowedOriginPatterns() {
+		WebMvcStompWebSocketEndpointRegistration registration =
+				new WebMvcStompWebSocketEndpointRegistration(new String[] {"/foo"}, this.handler, this.scheduler);
+
+		String origin = "https://*.mydomain.com";
+		registration.setAllowedOriginPatterns(origin).withSockJS();
+
+		MultiValueMap<HttpRequestHandler, String> mappings = registration.getMappings();
+		assertThat(mappings.size()).isEqualTo(1);
+		SockJsHttpRequestHandler requestHandler = (SockJsHttpRequestHandler)mappings.entrySet().iterator().next().getKey();
+		assertThat(requestHandler.getSockJsService()).isNotNull();
+		DefaultSockJsService sockJsService = (DefaultSockJsService)requestHandler.getSockJsService();
+		assertThat(sockJsService.getAllowedOriginPatterns().contains(origin)).isTrue();
+
+		registration =
+				new WebMvcStompWebSocketEndpointRegistration(new String[] {"/foo"}, this.handler, this.scheduler);
+		registration.withSockJS().setAllowedOriginPatterns(origin);
+		mappings = registration.getMappings();
+		assertThat(mappings.size()).isEqualTo(1);
+		requestHandler = (SockJsHttpRequestHandler)mappings.entrySet().iterator().next().getKey();
+		assertThat(requestHandler.getSockJsService()).isNotNull();
+		sockJsService = (DefaultSockJsService)requestHandler.getSockJsService();
+		assertThat(sockJsService.getAllowedOriginPatterns().contains(origin)).isTrue();
+	}
+
 	@Test  // SPR-12283
 	public void disableCorsWithSockJsService() {
 		WebMvcStompWebSocketEndpointRegistration registration =
 				new WebMvcStompWebSocketEndpointRegistration(new String[] {"/foo"}, this.handler, this.scheduler);
 
-		registration.withSockJS().setSupressCors(true);
+		registration.withSockJS().setSuppressCors(true);
 
 		MultiValueMap<HttpRequestHandler, String> mappings = registration.getMappings();
 		assertThat(mappings.size()).isEqualTo(1);

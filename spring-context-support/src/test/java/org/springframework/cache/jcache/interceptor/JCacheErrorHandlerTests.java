@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.cache.jcache.interceptor;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
+
 import javax.cache.annotation.CacheDefaults;
 import javax.cache.annotation.CachePut;
 import javax.cache.annotation.CacheRemove;
@@ -25,15 +26,15 @@ import javax.cache.annotation.CacheRemoveAll;
 import javax.cache.annotation.CacheResult;
 import javax.cache.annotation.CacheValue;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.cache.interceptor.SimpleKeyGenerator;
-import org.springframework.cache.jcache.config.JCacheConfigurerSupport;
+import org.springframework.cache.jcache.config.JCacheConfigurer;
 import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -59,7 +60,7 @@ public class JCacheErrorHandlerTests {
 	private SimpleService simpleService;
 
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(Config.class);
 		this.cache = context.getBean("mockCache", Cache.class);
@@ -140,7 +141,7 @@ public class JCacheErrorHandlerTests {
 
 	@Configuration
 	@EnableCaching
-	static class Config extends JCacheConfigurerSupport {
+	static class Config implements JCacheConfigurer {
 
 		@Bean
 		@Override

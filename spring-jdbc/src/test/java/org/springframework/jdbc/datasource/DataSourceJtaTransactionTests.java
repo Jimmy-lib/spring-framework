@@ -21,17 +21,18 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.sql.DataSource;
-import javax.transaction.RollbackException;
-import javax.transaction.Status;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import javax.sql.DataSource;
+
+import jakarta.transaction.RollbackException;
+import jakarta.transaction.Status;
+import jakarta.transaction.SystemException;
+import jakarta.transaction.Transaction;
+import jakarta.transaction.TransactionManager;
+import jakarta.transaction.UserTransaction;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import org.springframework.jdbc.datasource.lookup.BeanFactoryDataSourceLookup;
@@ -68,7 +69,7 @@ public class DataSourceJtaTransactionTests {
 	private TransactionManager transactionManager;
 	private Transaction transaction;
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		connection =mock(Connection.class);
 		dataSource = mock(DataSource.class);
@@ -78,7 +79,7 @@ public class DataSourceJtaTransactionTests {
 		given(dataSource.getConnection()).willReturn(connection);
 	}
 
-	@After
+	@AfterEach
 	public void verifyTransactionSynchronizationManagerState() {
 		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty()).isTrue();
 		assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isFalse();

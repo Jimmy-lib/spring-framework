@@ -31,21 +31,21 @@ import org.springframework.transaction.PlatformTransactionManager;
  * @author Sam Brannen
  * @since 4.1
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class EmptyDatabaseConfig {
 
 	@Bean
-	public JdbcTemplate jdbcTemplate(DataSource dataSource) {
+	JdbcTemplate jdbcTemplate(DataSource dataSource) {
 		return new JdbcTemplate(dataSource);
 	}
 
 	@Bean
-	public PlatformTransactionManager transactionManager(DataSource dataSource) {
+	PlatformTransactionManager transactionManager(DataSource dataSource) {
 		return new DataSourceTransactionManager(dataSource);
 	}
 
 	@Bean
-	public DataSource dataSource() {
+	DataSource dataSource() {
 		return new EmbeddedDatabaseBuilder()//
 		.setName("empty-sql-scripts-test-db")//
 		.build();

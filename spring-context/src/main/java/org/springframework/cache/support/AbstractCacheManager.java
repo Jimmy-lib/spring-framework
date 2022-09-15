@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,25 +87,26 @@ public abstract class AbstractCacheManager implements CacheManager, Initializing
 	@Override
 	@Nullable
 	public Cache getCache(String name) {
+		// Quick check for existing cache...
 		Cache cache = this.cacheMap.get(name);
 		if (cache != null) {
 			return cache;
 		}
-		else {
-			// Fully synchronize now for missing cache creation...
+
+		// The provider may support on-demand cache creation...
+		Cache missingCache = getMissingCache(name);
+		if (missingCache != null) {
+			// Fully synchronize now for missing cache registration
 			synchronized (this.cacheMap) {
 				cache = this.cacheMap.get(name);
 				if (cache == null) {
-					cache = getMissingCache(name);
-					if (cache != null) {
-						cache = decorateCache(cache);
-						this.cacheMap.put(name, cache);
-						updateCacheNames(name);
-					}
+					cache = decorateCache(missingCache);
+					this.cacheMap.put(name, cache);
+					updateCacheNames(name);
 				}
-				return cache;
 			}
 		}
+		return cache;
 	}
 
 	@Override
@@ -132,21 +133,6 @@ public abstract class AbstractCacheManager implements CacheManager, Initializing
 	}
 
 	/**
-	 * Dynamically register an additional Cache with this manager.
-	 * @param cache the Cache to register
-	 * @deprecated as of Spring 4.3, in favor of {@link #getMissingCache(String)}
-	 */
-	@Deprecated
-	protected final void addCache(Cache cache) {
-		String name = cache.getName();
-		synchronized (this.cacheMap) {
-			if (this.cacheMap.put(name, decorateCache(cache)) == null) {
-				updateCacheNames(name);
-			}
-		}
-	}
-
-	/**
 	 * Update the exposed {@link #cacheNames} set with the given name.
 	 * <p>This will always be called within a full {@link #cacheMap} lock
 	 * and effectively behaves like a {@code CopyOnWriteArraySet} with
@@ -154,8 +140,7 @@ public abstract class AbstractCacheManager implements CacheManager, Initializing
 	 * @param name the name of the cache to be added
 	 */
 	private void updateCacheNames(String name) {
-		Set<String> cacheNames = new LinkedHashSet<>(this.cacheNames.size() + 1);
-		cacheNames.addAll(this.cacheNames);
+		Set<String> cacheNames = new LinkedHashSet<>(this.cacheNames);
 		cacheNames.add(name);
 		this.cacheNames = Collections.unmodifiableSet(cacheNames);
 	}

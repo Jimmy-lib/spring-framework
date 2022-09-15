@@ -20,7 +20,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,11 +27,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.sql.DataSource;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.jdbc.core.RowMapper;
 
@@ -61,7 +61,7 @@ public class NamedParameterQueryTests {
 	private NamedParameterJdbcTemplate template;
 
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		connection = mock(Connection.class);
 		dataSource = mock(DataSource.class);
@@ -76,7 +76,7 @@ public class NamedParameterQueryTests {
 		given(preparedStatement.executeQuery()).willReturn(resultSet);
 	}
 
-	@After
+	@AfterEach
 	public void verifyClose() throws Exception {
 		verify(preparedStatement).close();
 		verify(resultSet).close();
@@ -175,12 +175,7 @@ public class NamedParameterQueryTests {
 		MapSqlParameterSource params = new MapSqlParameterSource();
 		params.addValue("id", 3);
 		Object o = template.queryForObject("SELECT AGE FROM CUSTMR WHERE ID = :id",
-				params, new RowMapper<Object>() {
-			@Override
-			public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
-				return rs.getInt(1);
-			}
-		});
+				params, (RowMapper<Object>) (rs, rowNum) -> rs.getInt(1));
 
 		boolean condition = o instanceof Integer;
 		assertThat(condition).as("Correct result type").isTrue();

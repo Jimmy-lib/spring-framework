@@ -16,13 +16,12 @@
 
 package org.springframework.test.web.servlet.samples.spr;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.context.annotation.AnnotatedBeanDefinitionReader;
 import org.springframework.context.annotation.Bean;
@@ -65,7 +64,7 @@ public class CustomRequestAttributesRequestContextHolderTests {
 	private MockMvc mockMvc;
 
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		ServletContext servletContext = new MockServletContext();
 		MockHttpServletRequest mockRequest = new MockHttpServletRequest(servletContext);
@@ -87,7 +86,7 @@ public class CustomRequestAttributesRequestContextHolderTests {
 		this.mockMvc.perform(get("/singletonController").requestAttr(FROM_MVC_TEST_MOCK, FROM_MVC_TEST_MOCK));
 	}
 
-	@After
+	@AfterEach
 	public void verifyCustomRequestAttributesAreRestored() {
 		RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
 		assertThat(requestAttributes).isInstanceOf(ServletRequestAttributes.class);

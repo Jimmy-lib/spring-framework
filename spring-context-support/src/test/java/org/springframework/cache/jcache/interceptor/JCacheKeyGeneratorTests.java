@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,13 @@ package org.springframework.cache.jcache.interceptor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
+
 import javax.cache.annotation.CacheDefaults;
 import javax.cache.annotation.CacheKey;
 import javax.cache.annotation.CacheResult;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -33,7 +34,7 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.cache.interceptor.SimpleKey;
 import org.springframework.cache.interceptor.SimpleKeyGenerator;
-import org.springframework.cache.jcache.config.JCacheConfigurerSupport;
+import org.springframework.cache.jcache.config.JCacheConfigurer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,7 +52,7 @@ public class JCacheKeyGeneratorTests {
 
 	private Cache cache;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(Config.class);
 		this.keyGenerator = context.getBean(TestKeyGenerator.class);
@@ -96,7 +97,7 @@ public class JCacheKeyGeneratorTests {
 
 	@Configuration
 	@EnableCaching
-	static class Config extends JCacheConfigurerSupport {
+	static class Config implements JCacheConfigurer {
 
 		@Bean
 		@Override
@@ -150,7 +151,7 @@ public class JCacheKeyGeneratorTests {
 		@Override
 		public Object generate(Object target, Method method, Object... params) {
 			assertThat(Arrays.equals(expectedParams, params)).as("Unexpected parameters: expected: "
-								+ Arrays.toString(this.expectedParams) + " but got: " + Arrays.toString(params)).isTrue();
+					+ Arrays.toString(this.expectedParams) + " but got: " + Arrays.toString(params)).isTrue();
 			return new SimpleKey(params);
 		}
 	}

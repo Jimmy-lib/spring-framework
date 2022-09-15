@@ -19,11 +19,9 @@ package org.springframework.beans.support;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import org.springframework.tests.Assume;
-import org.springframework.tests.TestGroup;
-import org.springframework.tests.sample.beans.TestBean;
+import org.springframework.beans.testfixture.beans.TestBean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,8 +36,6 @@ public class PagedListHolderTests {
 	@Test
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void testPagedListHolder() {
-		Assume.group(TestGroup.LONG_RUNNING);
-
 		TestBean tb1 = new TestBean();
 		tb1.setName("eva");
 		tb1.setAge(25);
@@ -199,14 +195,22 @@ public class PagedListHolderTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (!(o instanceof MockFilter)) return false;
+			if (this == o) {
+				return true;
+			}
+			if (!(o instanceof MockFilter mockFilter)) {
+				return false;
+			}
 
-			final MockFilter mockFilter = (MockFilter) o;
-
-			if (!age.equals(mockFilter.age)) return false;
-			if (!extendedInfo.equals(mockFilter.extendedInfo)) return false;
-			if (!name.equals(mockFilter.name)) return false;
+			if (!age.equals(mockFilter.age)) {
+				return false;
+			}
+			if (!extendedInfo.equals(mockFilter.extendedInfo)) {
+				return false;
+			}
+			if (!name.equals(mockFilter.name)) {
+				return false;
+			}
 
 			return true;
 		}

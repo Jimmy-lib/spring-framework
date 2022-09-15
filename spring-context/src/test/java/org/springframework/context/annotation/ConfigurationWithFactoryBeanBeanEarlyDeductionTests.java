@@ -18,7 +18,7 @@ package org.springframework.context.annotation;
 
 import java.util.Arrays;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
@@ -95,16 +95,13 @@ public class ConfigurationWithFactoryBeanBeanEarlyDeductionTests {
 		beanDefinition.setFactoryBeanName("factoryBean");
 		beanDefinition.setFactoryMethodName("myBean");
 		GenericApplicationContext context = new GenericApplicationContext();
-		try {
+		try (context) {
 			context.registerBeanDefinition("factoryBean", factoryBeanDefinition);
 			context.registerBeanDefinition("myBean", beanDefinition);
 			NameCollectingBeanFactoryPostProcessor postProcessor = new NameCollectingBeanFactoryPostProcessor();
 			context.addBeanFactoryPostProcessor(postProcessor);
 			context.refresh();
 			assertContainsMyBeanName(postProcessor.getNames());
-		}
-		finally {
-			context.close();
 		}
 	}
 
@@ -118,15 +115,12 @@ public class ConfigurationWithFactoryBeanBeanEarlyDeductionTests {
 			BeanFactoryPostProcessor... postProcessors) {
 		NameCollectingBeanFactoryPostProcessor postProcessor = new NameCollectingBeanFactoryPostProcessor();
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-		try {
+		try (context) {
 			Arrays.stream(postProcessors).forEach(context::addBeanFactoryPostProcessor);
 			context.addBeanFactoryPostProcessor(postProcessor);
 			context.register(configurationClass);
 			context.refresh();
 			assertContainsMyBeanName(postProcessor.getNames());
-		}
-		finally {
-			context.close();
 		}
 	}
 
@@ -194,8 +188,7 @@ public class ConfigurationWithFactoryBeanBeanEarlyDeductionTests {
 	static class AttributeClassRegistrar implements ImportBeanDefinitionRegistrar {
 
 		@Override
-		public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata,
-				BeanDefinitionRegistry registry) {
+		public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 			BeanDefinition definition = BeanDefinitionBuilder.genericBeanDefinition(
 					RawWithAbstractObjectTypeFactoryBean.class).getBeanDefinition();
 			definition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, MyBean.class);

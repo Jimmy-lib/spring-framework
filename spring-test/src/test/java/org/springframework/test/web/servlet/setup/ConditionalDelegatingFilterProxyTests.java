@@ -16,15 +16,14 @@
 
 package org.springframework.test.web.servlet.setup;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-
-import org.junit.Before;
-import org.junit.Test;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockFilterConfig;
@@ -52,7 +51,7 @@ public class ConditionalDelegatingFilterProxyTests {
 	private PatternMappingFilterProxy filter;
 
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		request = new MockHttpServletRequest();
 		request.setContextPath("/context");

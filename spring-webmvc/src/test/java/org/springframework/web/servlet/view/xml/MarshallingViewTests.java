@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,19 @@ package org.springframework.web.servlet.view.xml;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import javax.xml.bind.JAXBElement;
+
 import javax.xml.namespace.QName;
 import javax.xml.transform.stream.StreamResult;
 
-import org.junit.Before;
-import org.junit.Test;
+import jakarta.xml.bind.JAXBElement;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.springframework.mock.web.test.MockHttpServletRequest;
-import org.springframework.mock.web.test.MockHttpServletResponse;
 import org.springframework.oxm.Marshaller;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.testfixture.servlet.MockHttpServletRequest;
+import org.springframework.web.testfixture.servlet.MockHttpServletResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
@@ -51,7 +52,7 @@ public class MarshallingViewTests {
 	private MarshallingView view;
 
 
-	@Before
+	@BeforeEach
 	public void createView() throws Exception {
 		marshallerMock = mock(Marshaller.class);
 		view = new MarshallingView(marshallerMock);
@@ -65,12 +66,12 @@ public class MarshallingViewTests {
 
 	@Test
 	public void isExposePathVars() {
-		assertThat(view.isExposePathVariables()).as("Must not expose path variables").isEqualTo(false);
+		assertThat(view.isExposePathVariables()).as("Must not expose path variables").isFalse();
 	}
 
 	@Test
 	public void isExposePathVarsDefaultConstructor() {
-		assertThat(new MarshallingView().isExposePathVariables()).as("Must not expose path variables").isEqualTo(false);
+		assertThat(new MarshallingView().isExposePathVariables()).as("Must not expose path variables").isFalse();
 	}
 
 	@Test

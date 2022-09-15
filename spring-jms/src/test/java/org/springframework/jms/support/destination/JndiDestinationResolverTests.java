@@ -16,11 +16,11 @@
 
 package org.springframework.jms.support.destination;
 
-import javax.jms.Destination;
-import javax.jms.Session;
 import javax.naming.NamingException;
 
-import org.junit.Test;
+import jakarta.jms.Destination;
+import jakarta.jms.Session;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.jms.StubTopic;
 

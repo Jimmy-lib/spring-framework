@@ -16,9 +16,9 @@
 
 package org.springframework.beans.factory.config;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.BeanFactory;
@@ -44,7 +44,7 @@ public class ServiceLocatorFactoryBeanTests {
 
 	private DefaultListableBeanFactory bf;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		bf = new DefaultListableBeanFactory();
 	}
@@ -135,7 +135,7 @@ public class ServiceLocatorFactoryBeanTests {
 				factory.getTestService("bogusTestService"));
 	}
 
-	@Ignore @Test // worked when using an ApplicationContext (see commented), fails when using BeanFactory
+	@Disabled @Test // worked when using an ApplicationContext (see commented), fails when using BeanFactory
 	public void testCombinedLocatorInterface() {
 		bf.registerBeanDefinition("testService", genericBeanDefinition(TestService.class).getBeanDefinition());
 		bf.registerAlias("testService", "1");
@@ -168,7 +168,7 @@ public class ServiceLocatorFactoryBeanTests {
 		assertThat(factory.toString().contains("TestServiceLocator3")).isTrue();
 	}
 
-	@Ignore @Test // worked when using an ApplicationContext (see commented), fails when using BeanFactory
+	@Disabled @Test // worked when using an ApplicationContext (see commented), fails when using BeanFactory
 	public void testServiceMappings() {
 		bf.registerBeanDefinition("testService1", genericBeanDefinition(TestService.class).getBeanDefinition());
 		bf.registerBeanDefinition("testService2", genericBeanDefinition(ExtendedTestService.class).getBeanDefinition());
@@ -278,19 +278,19 @@ public class ServiceLocatorFactoryBeanTests {
 	}
 
 
-	public static interface TestServiceLocator {
+	public interface TestServiceLocator {
 
 		TestService getTestService();
 	}
 
 
-	public static interface TestServiceLocator2 {
+	public interface TestServiceLocator2 {
 
 		TestService getTestService(String id) throws CustomServiceLocatorException2;
 	}
 
 
-	public static interface TestServiceLocator3 {
+	public interface TestServiceLocator3 {
 
 		TestService getTestService();
 
@@ -302,13 +302,13 @@ public class ServiceLocatorFactoryBeanTests {
 	}
 
 
-	public static interface TestService2Locator {
+	public interface TestService2Locator {
 
 		TestService2 getTestService() throws CustomServiceLocatorException3;
 	}
 
 
-	public static interface ServiceLocatorInterfaceWithExtraNonCompliantMethod {
+	public interface ServiceLocatorInterfaceWithExtraNonCompliantMethod {
 
 		TestService2 getTestService();
 

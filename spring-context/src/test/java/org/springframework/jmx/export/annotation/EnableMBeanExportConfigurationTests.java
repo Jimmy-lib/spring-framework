@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ package org.springframework.jmx.export.annotation;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -54,7 +54,7 @@ public class EnableMBeanExportConfigurationTests {
 	private AnnotationConfigApplicationContext ctx;
 
 
-	@After
+	@AfterEach
 	public void closeContext() {
 		if (this.ctx != null) {
 			this.ctx.close();
@@ -251,7 +251,7 @@ public class EnableMBeanExportConfigurationTests {
 		@Bean
 		@Lazy
 		public Object notLoadable() throws Exception {
-			return Class.forName("does.not.exist").newInstance();
+			return Class.forName("does.not.exist").getDeclaredConstructor().newInstance();
 		}
 	}
 

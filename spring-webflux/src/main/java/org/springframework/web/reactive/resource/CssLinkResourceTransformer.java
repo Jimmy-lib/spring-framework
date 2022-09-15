@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,8 +70,8 @@ public class CssLinkResourceTransformer extends ResourceTransformerSupport {
 	}
 
 
-	@SuppressWarnings("deprecation")
 	@Override
+	@SuppressWarnings("deprecation")
 	public Mono<Resource> transform(ServerWebExchange exchange, Resource inputResource,
 			ResourceTransformerChain transformerChain) {
 
@@ -79,8 +79,7 @@ public class CssLinkResourceTransformer extends ResourceTransformerSupport {
 				.flatMap(outputResource -> {
 					String filename = outputResource.getFilename();
 					if (!"css".equals(StringUtils.getFilenameExtension(filename)) ||
-							inputResource instanceof EncodedResourceResolver.EncodedResource ||
-							inputResource instanceof GzipResourceResolver.GzippedResource) {
+							inputResource instanceof EncodedResourceResolver.EncodedResource) {
 						return Mono.just(outputResource);
 					}
 
@@ -190,7 +189,6 @@ public class CssLinkResourceTransformer extends ResourceTransformerSupport {
 				}
 				else {
 					position = extractUnquotedLink(position, content, result);
-
 				}
 			}
 		}
@@ -203,7 +201,7 @@ public class CssLinkResourceTransformer extends ResourceTransformerSupport {
 		}
 
 		/**
-		 * Invoked after a keyword match, after whitespaces removed, and when
+		 * Invoked after a keyword match, after whitespace has been removed, and when
 		 * the next char is neither a single nor double quote.
 		 */
 		protected abstract int extractUnquotedLink(int position, String content,
@@ -221,8 +219,8 @@ public class CssLinkResourceTransformer extends ResourceTransformerSupport {
 
 		@Override
 		protected int extractUnquotedLink(int position, String content, Set<ContentChunkInfo> result) {
-			if (content.substring(position, position + 4).equals("url(")) {
-				// Ignore, UrlFunctionContentParser will take care
+			if (content.startsWith("url(", position)) {
+				// Ignore: UrlFunctionLinkParser will handle it.
 			}
 			else if (logger.isTraceEnabled()) {
 				logger.trace("Unexpected syntax for @import link at index " + position);
@@ -289,10 +287,9 @@ public class CssLinkResourceTransformer extends ResourceTransformerSupport {
 			if (this == other) {
 				return true;
 			}
-			if (!(other instanceof ContentChunkInfo)) {
+			if (!(other instanceof ContentChunkInfo otherCci)) {
 				return false;
 			}
-			ContentChunkInfo otherCci = (ContentChunkInfo) other;
 			return (this.start == otherCci.start && this.end == otherCci.end);
 		}
 

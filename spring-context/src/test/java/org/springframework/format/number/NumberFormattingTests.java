@@ -20,9 +20,9 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -30,7 +30,6 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.format.annotation.NumberFormat;
 import org.springframework.format.annotation.NumberFormat.Style;
 import org.springframework.format.support.FormattingConversionService;
-import org.springframework.util.StringValueResolver;
 import org.springframework.validation.DataBinder;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,18 +45,15 @@ public class NumberFormattingTests {
 	private DataBinder binder;
 
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		DefaultConversionService.addDefaultConverters(conversionService);
-		conversionService.setEmbeddedValueResolver(new StringValueResolver() {
-			@Override
-			public String resolveStringValue(String strVal) {
-				if ("${pattern}".equals(strVal)) {
-					return "#,##.00";
-				}
-				else {
-					return strVal;
-				}
+		conversionService.setEmbeddedValueResolver(strVal -> {
+			if ("${pattern}".equals(strVal)) {
+				return "#,##.00";
+			}
+			else {
+				return strVal;
 			}
 		});
 		conversionService.addFormatterForFieldType(Number.class, new NumberStyleFormatter());
@@ -67,7 +63,7 @@ public class NumberFormattingTests {
 		binder.setConversionService(conversionService);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		LocaleContextHolder.setLocale(null);
 	}

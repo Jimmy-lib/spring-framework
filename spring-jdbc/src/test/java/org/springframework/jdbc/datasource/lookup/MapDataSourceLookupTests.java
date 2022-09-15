@@ -18,9 +18,10 @@ package org.springframework.jdbc.datasource.lookup;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.sql.DataSource;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -72,9 +73,9 @@ public class MapDataSourceLookupTests {
 	@Test
 	public void addingDataSourcePermitsOverride() throws Exception {
 		Map<String, DataSource> dataSources = new HashMap<>();
-		StubDataSource overridenDataSource = new StubDataSource();
+		StubDataSource overriddenDataSource = new StubDataSource();
 		StubDataSource expectedDataSource = new StubDataSource();
-		dataSources.put(DATA_SOURCE_NAME, overridenDataSource);
+		dataSources.put(DATA_SOURCE_NAME, overriddenDataSource);
 		MapDataSourceLookup lookup = new MapDataSourceLookup();
 		lookup.setDataSources(dataSources);
 		lookup.addDataSource(DATA_SOURCE_NAME, expectedDataSource); // must override existing entry

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package org.springframework.http.client.support;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -30,7 +30,6 @@ import org.springframework.http.client.ClientHttpResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
 /**
  * Tests for {@link InterceptingHttpAccessor}.
  *
@@ -40,6 +39,7 @@ public class InterceptingHttpAccessorTests {
 
 	@Test
 	public void getInterceptors() {
+		@SuppressWarnings("resource")
 		TestInterceptingHttpAccessor accessor = new TestInterceptingHttpAccessor();
 		List<ClientHttpRequestInterceptor> interceptors = Arrays.asList(
 				new SecondClientHttpRequestInterceptor(),

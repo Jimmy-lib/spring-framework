@@ -16,10 +16,9 @@
 
 package org.springframework.jms.listener.endpoint;
 
-import javax.jms.Destination;
-import javax.jms.Session;
-
-import org.junit.Test;
+import jakarta.jms.Destination;
+import jakarta.jms.Session;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.jca.StubResourceAdapter;
 import org.springframework.jms.StubQueue;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import org.springframework.core.ReactiveAdapter;
 import org.springframework.core.ReactiveAdapterRegistry;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
 import org.springframework.ui.Model;
@@ -81,8 +81,7 @@ import org.springframework.web.server.ServerWebExchange;
  * @author Rossen Stoyanchev
  * @since 5.0
  */
-public class ViewResolutionResultHandler extends HandlerResultHandlerSupport
-		implements HandlerResultHandler, Ordered {
+public class ViewResolutionResultHandler extends HandlerResultHandlerSupport implements HandlerResultHandler, Ordered {
 
 	private static final Object NO_VALUE = new Object();
 
@@ -145,6 +144,7 @@ public class ViewResolutionResultHandler extends HandlerResultHandlerSupport
 		return this.defaultViews;
 	}
 
+
 	@Override
 	public boolean supports(HandlerResult result) {
 		if (hasModelAnnotation(result.getReturnTypeSource())) {
@@ -160,14 +160,12 @@ public class ViewResolutionResultHandler extends HandlerResultHandlerSupport
 			type = result.getReturnType().getGeneric().toClass();
 		}
 
-		return (CharSequence.class.isAssignableFrom(type) || Rendering.class.isAssignableFrom(type) ||
-				Model.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type) ||
-				void.class.equals(type) || View.class.isAssignableFrom(type) ||
+		return (CharSequence.class.isAssignableFrom(type) ||
+				Rendering.class.isAssignableFrom(type) ||
+				Model.class.isAssignableFrom(type) ||
+				Map.class.isAssignableFrom(type) ||
+				View.class.isAssignableFrom(type) ||
 				!BeanUtils.isSimpleProperty(type));
-	}
-
-	private boolean hasModelAnnotation(MethodParameter parameter) {
-		return parameter.hasMethodAnnotation(ModelAttribute.class);
 	}
 
 	@Override
@@ -216,7 +214,7 @@ public class ViewResolutionResultHandler extends HandlerResultHandlerSupport
 					}
 					else if (Rendering.class.isAssignableFrom(clazz)) {
 						Rendering render = (Rendering) returnValue;
-						HttpStatus status = render.status();
+						HttpStatusCode status = render.status();
 						if (status != null) {
 							exchange.getResponse().setStatusCode(status);
 						}
@@ -249,6 +247,11 @@ public class ViewResolutionResultHandler extends HandlerResultHandlerSupport
 					updateBindingResult(bindingContext, exchange);
 					return viewsMono.flatMap(views -> render(views, model.asMap(), bindingContext, exchange));
 				});
+	}
+
+
+	private boolean hasModelAnnotation(MethodParameter parameter) {
+		return parameter.hasMethodAnnotation(ModelAttribute.class);
 	}
 
 	/**
@@ -317,7 +320,20 @@ public class ViewResolutionResultHandler extends HandlerResultHandlerSupport
 			}
 		}
 		List<MediaType> mediaTypes = getMediaTypes(views);
-		MediaType bestMediaType = selectMediaType(exchange, () -> mediaTypes);
+		MediaType bestMediaType;
+		try {
+			bestMediaType = selectMediaType(exchange, () -> mediaTypes);
+		}
+		catch (NotAcceptableStatusException ex) {
+			HttpStatusCode statusCode = exchange.getResponse().getStatusCode();
+			if (statusCode != null && statusCode.isError()) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("Ignoring error response content (if any). " + ex.getReason());
+				}
+				return Mono.empty();
+			}
+			throw ex;
+		}
 		if (bestMediaType != null) {
 			for (View view : views) {
 				for (MediaType mediaType : view.getSupportedMediaTypes()) {

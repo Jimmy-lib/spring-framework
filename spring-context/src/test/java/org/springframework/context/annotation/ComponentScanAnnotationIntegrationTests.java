@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import example.scannable_implicitbasepackage.ComponentScanAnnotatedConfigWithImp
 import example.scannable_implicitbasepackage.ConfigurableComponent;
 import example.scannable_scoped.CustomScopeAnnotationBean;
 import example.scannable_scoped.MyScope;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
@@ -51,15 +51,16 @@ import org.springframework.context.annotation.ComponentScanParserTests.KustomAnn
 import org.springframework.context.annotation.componentscan.simple.ClassWithNestedComponents;
 import org.springframework.context.annotation.componentscan.simple.SimpleComponent;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.context.testfixture.SimpleMapScope;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.testfixture.io.SerializationTestUtils;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.filter.TypeFilter;
-import org.springframework.tests.context.SimpleMapScope;
-import org.springframework.util.SerializationTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.genericBeanDefinition;
@@ -78,7 +79,7 @@ public class ComponentScanAnnotationIntegrationTests {
 	@Test
 	public void controlScan() {
 		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
-		ctx.scan(example.scannable._package.class.getPackage().getName());
+		ctx.scan(example.scannable.PackageMarker.class.getPackage().getName());
 		ctx.refresh();
 		assertThat(ctx.containsBean("fooServiceImpl")).as(
 				"control scan for example.scannable package failed to register FooServiceImpl bean").isTrue();
@@ -212,7 +213,7 @@ public class ComponentScanAnnotationIntegrationTests {
 		assertThat(AopUtils.isJdkDynamicProxy(bean)).isTrue();
 		// test serializability
 		assertThat(bean.foo(1)).isEqualTo("bar");
-		FooService deserialized = (FooService) SerializationTestUtils.serializeAndDeserialize(bean);
+		FooService deserialized = SerializationTestUtils.serializeAndDeserialize(bean);
 		assertThat(deserialized).isNotNull();
 		assertThat(deserialized.foo(1)).isEqualTo("bar");
 	}
@@ -274,6 +275,7 @@ public class ComponentScanAnnotationIntegrationTests {
 	@Target(ElementType.TYPE)
 	public @interface ComposedConfiguration {
 
+		@AliasFor(annotation = ComponentScan.class)
 		String[] basePackages() default {};
 	}
 
@@ -326,7 +328,7 @@ public class ComponentScanAnnotationIntegrationTests {
 
 
 @Configuration
-@ComponentScan(basePackageClasses = example.scannable._package.class)
+@ComponentScan(basePackageClasses = example.scannable.PackageMarker.class)
 class ComponentScanAnnotatedConfig {
 
 	@Bean
@@ -456,7 +458,7 @@ class ComponentScanWithMultipleAnnotationIncludeFilters2 {}
 @ComponentScan(
 		value = "example.scannable",
 		basePackages = "example.scannable",
-		basePackageClasses = example.scannable._package.class)
+		basePackageClasses = example.scannable.PackageMarker.class)
 class ComponentScanWithBasePackagesAndValueAlias {}
 
 

@@ -16,7 +16,7 @@
 
 package org.springframework.expression.spel;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.expression.EvaluationException;
 import org.springframework.expression.Operation;
@@ -35,7 +35,7 @@ public class OperatorOverloaderTests extends AbstractExpressionTests {
 
 	@Test
 	public void testSimpleOperations() throws Exception {
-		// no built in support for this:
+		// no built-in support for this:
 		evaluateAndCheckError("'abc'-true",SpelMessage.OPERATOR_NOT_SUPPORTED_BETWEEN_TYPES);
 
 		StandardEvaluationContext eContext = TestScenarioCreator.getTestEvaluationContext();

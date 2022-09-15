@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +16,28 @@
 
 package org.springframework.scheduling.annotation;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.testfixture.EnabledForTestGroups;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.config.IntervalTask;
 import org.springframework.scheduling.config.ScheduledTaskHolder;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.scheduling.config.TaskManagementConfigUtils;
-import org.springframework.tests.Assume;
-import org.springframework.tests.TestGroup;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.core.testfixture.TestGroup.LONG_RUNNING;
 
 /**
  * Tests use of @EnableScheduling on @Configuration classes.
@@ -49,7 +51,7 @@ public class EnableSchedulingTests {
 	private AnnotationConfigApplicationContext ctx;
 
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		if (ctx != null) {
 			ctx.close();
@@ -58,9 +60,8 @@ public class EnableSchedulingTests {
 
 
 	@Test
+	@EnabledForTestGroups(LONG_RUNNING)
 	public void withFixedRateTask() throws InterruptedException {
-		Assume.group(TestGroup.PERFORMANCE);
-
 		ctx = new AnnotationConfigApplicationContext(FixedRateTaskConfig.class);
 		assertThat(ctx.getBean(ScheduledTaskHolder.class).getScheduledTasks().size()).isEqualTo(2);
 
@@ -69,9 +70,8 @@ public class EnableSchedulingTests {
 	}
 
 	@Test
+	@EnabledForTestGroups(LONG_RUNNING)
 	public void withSubclass() throws InterruptedException {
-		Assume.group(TestGroup.PERFORMANCE);
-
 		ctx = new AnnotationConfigApplicationContext(FixedRateTaskConfigSubclass.class);
 		assertThat(ctx.getBean(ScheduledTaskHolder.class).getScheduledTasks().size()).isEqualTo(2);
 
@@ -80,9 +80,8 @@ public class EnableSchedulingTests {
 	}
 
 	@Test
+	@EnabledForTestGroups(LONG_RUNNING)
 	public void withExplicitScheduler() throws InterruptedException {
-		Assume.group(TestGroup.PERFORMANCE);
-
 		ctx = new AnnotationConfigApplicationContext(ExplicitSchedulerConfig.class);
 		assertThat(ctx.getBean(ScheduledTaskHolder.class).getScheduledTasks().size()).isEqualTo(1);
 
@@ -100,9 +99,8 @@ public class EnableSchedulingTests {
 	}
 
 	@Test
+	@EnabledForTestGroups(LONG_RUNNING)
 	public void withExplicitScheduledTaskRegistrar() throws InterruptedException {
-		Assume.group(TestGroup.PERFORMANCE);
-
 		ctx = new AnnotationConfigApplicationContext(ExplicitScheduledTaskRegistrarConfig.class);
 		assertThat(ctx.getBean(ScheduledTaskHolder.class).getScheduledTasks().size()).isEqualTo(1);
 
@@ -123,9 +121,8 @@ public class EnableSchedulingTests {
 	}
 
 	@Test
+	@EnabledForTestGroups(LONG_RUNNING)
 	public void withAmbiguousTaskSchedulers_andSingleTask_disambiguatedByScheduledTaskRegistrarBean() throws InterruptedException {
-		Assume.group(TestGroup.PERFORMANCE);
-
 		ctx = new AnnotationConfigApplicationContext(
 				SchedulingEnabled_withAmbiguousTaskSchedulers_andSingleTask_disambiguatedByScheduledTaskRegistrar.class);
 
@@ -134,9 +131,8 @@ public class EnableSchedulingTests {
 	}
 
 	@Test
+	@EnabledForTestGroups(LONG_RUNNING)
 	public void withAmbiguousTaskSchedulers_andSingleTask_disambiguatedBySchedulerNameAttribute() throws InterruptedException {
-		Assume.group(TestGroup.PERFORMANCE);
-
 		ctx = new AnnotationConfigApplicationContext(
 				SchedulingEnabled_withAmbiguousTaskSchedulers_andSingleTask_disambiguatedBySchedulerNameAttribute.class);
 
@@ -145,9 +141,8 @@ public class EnableSchedulingTests {
 	}
 
 	@Test
+	@EnabledForTestGroups(LONG_RUNNING)
 	public void withTaskAddedVia_configureTasks() throws InterruptedException {
-		Assume.group(TestGroup.PERFORMANCE);
-
 		ctx = new AnnotationConfigApplicationContext(SchedulingEnabled_withTaskAddedVia_configureTasks.class);
 
 		Thread.sleep(100);
@@ -155,9 +150,8 @@ public class EnableSchedulingTests {
 	}
 
 	@Test
+	@EnabledForTestGroups(LONG_RUNNING)
 	public void withTriggerTask() throws InterruptedException {
-		Assume.group(TestGroup.PERFORMANCE);
-
 		ctx = new AnnotationConfigApplicationContext(TriggerTaskConfig.class);
 
 		Thread.sleep(100);
@@ -165,9 +159,8 @@ public class EnableSchedulingTests {
 	}
 
 	@Test
+	@EnabledForTestGroups(LONG_RUNNING)
 	public void withInitiallyDelayedFixedRateTask() throws InterruptedException {
-		Assume.group(TestGroup.PERFORMANCE);
-
 		ctx = new AnnotationConfigApplicationContext(FixedRateTaskConfig_withInitialDelay.class);
 
 		Thread.sleep(1950);
@@ -185,7 +178,7 @@ public class EnableSchedulingTests {
 
 		@Override
 		public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
-			taskRegistrar.addFixedRateTask(() -> {}, 100);
+			taskRegistrar.addFixedRateTask(() -> {}, Duration.ofMillis(100));
 		}
 
 		@Bean
@@ -431,13 +424,8 @@ public class EnableSchedulingTests {
 		public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
 			taskRegistrar.setScheduler(taskScheduler());
 			taskRegistrar.addFixedRateTask(new IntervalTask(
-					new Runnable() {
-						@Override
-						public void run() {
-							worker().executedByThread = Thread.currentThread().getName();
-						}
-					},
-					10, 0));
+					() -> worker().executedByThread = Thread.currentThread().getName(),
+					Duration.ofMillis(10)));
 		}
 	}
 
@@ -455,7 +443,7 @@ public class EnableSchedulingTests {
 			ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 			scheduler.initialize();
 			scheduler.schedule(() -> counter().incrementAndGet(),
-					triggerContext -> new Date(new Date().getTime()+10));
+					triggerContext -> Instant.now().plus(10, ChronoUnit.MILLIS));
 			return scheduler;
 		}
 	}

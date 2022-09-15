@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ public interface CacheAwareContextLoaderDelegate {
 	 * implementation in Spring overrides this method appropriately.
 	 * @param mergedContextConfiguration the merged context configuration used
 	 * to load the application context; never {@code null}
-	 * @return {@code true} if the the application context has been loaded
+	 * @return {@code true} if the application context has been loaded
 	 * @since 5.2
 	 * @see #loadContext
 	 * @see #closeContext

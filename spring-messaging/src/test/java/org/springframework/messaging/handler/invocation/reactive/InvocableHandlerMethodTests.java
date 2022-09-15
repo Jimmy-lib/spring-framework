@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -183,6 +183,8 @@ public class InvocableHandlerMethodTests {
 
 		private AtomicReference<String> result = new AtomicReference<>();
 
+		public Handler() {
+		}
 
 		public String getResult() {
 			return this.result.get();

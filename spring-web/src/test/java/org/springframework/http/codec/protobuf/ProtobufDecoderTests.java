@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,16 +20,16 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import com.google.protobuf.Message;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import org.springframework.core.ResolvableType;
-import org.springframework.core.codec.AbstractDecoderTestCase;
 import org.springframework.core.codec.DecodingException;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.core.testfixture.codec.AbstractDecoderTests;
 import org.springframework.http.MediaType;
 import org.springframework.protobuf.Msg;
 import org.springframework.protobuf.SecondMsg;
@@ -46,7 +46,7 @@ import static org.springframework.core.io.buffer.DataBufferUtils.release;
  *
  * @author Sebastien Deleuze
  */
-public class ProtobufDecoderTests extends AbstractDecoderTestCase<ProtobufDecoder> {
+public class ProtobufDecoderTests extends AbstractDecoderTests<ProtobufDecoder> {
 
 	private final static MimeType PROTOBUF_MIME_TYPE = new MimeType("application", "x-protobuf");
 
@@ -65,12 +65,11 @@ public class ProtobufDecoderTests extends AbstractDecoderTestCase<ProtobufDecode
 
 	@Test
 	public void extensionRegistryNull() {
-		assertThatIllegalArgumentException().isThrownBy(() ->
-				new ProtobufDecoder(null));
+		assertThatIllegalArgumentException().isThrownBy(() -> new ProtobufDecoder(null));
 	}
 
-	@Override
 	@Test
+	@Override
 	public void canDecode() {
 		assertThat(this.decoder.canDecode(forClass(Msg.class), null)).isTrue();
 		assertThat(this.decoder.canDecode(forClass(Msg.class), PROTOBUF_MIME_TYPE)).isTrue();
@@ -79,8 +78,8 @@ public class ProtobufDecoderTests extends AbstractDecoderTestCase<ProtobufDecode
 		assertThat(this.decoder.canDecode(forClass(Object.class), PROTOBUF_MIME_TYPE)).isFalse();
 	}
 
-	@Override
 	@Test
+	@Override
 	public void decodeToMono() {
 		Mono<DataBuffer> input = dataBuffer(this.testMsg1);
 
@@ -107,8 +106,9 @@ public class ProtobufDecoderTests extends AbstractDecoderTestCase<ProtobufDecode
 				.verifyComplete());
 	}
 
-	@Override
 	@Test
+	@Override
+	@SuppressWarnings("deprecation")
 	public void decode() {
 		Flux<DataBuffer> input = Flux.just(this.testMsg1, this.testMsg2)
 				.flatMap(msg -> Mono.defer(() -> {
@@ -130,9 +130,8 @@ public class ProtobufDecoderTests extends AbstractDecoderTestCase<ProtobufDecode
 	}
 
 	@Test
+	@SuppressWarnings("deprecation")
 	public void decodeSplitChunks() {
-
-
 		Flux<DataBuffer> input = Flux.just(this.testMsg1, this.testMsg2)
 				.flatMap(msg -> Mono.defer(() -> {
 					DataBuffer buffer = this.bufferFactory.allocateBuffer();
@@ -163,6 +162,7 @@ public class ProtobufDecoderTests extends AbstractDecoderTestCase<ProtobufDecode
 	}
 
 	@Test  // SPR-17429
+	@SuppressWarnings("deprecation")
 	public void decodeSplitMessageSize() {
 		this.decoder.setMaxMessageSize(100009);
 		StringBuilder builder = new StringBuilder();
@@ -201,6 +201,7 @@ public class ProtobufDecoderTests extends AbstractDecoderTestCase<ProtobufDecode
 	}
 
 	@Test
+	@SuppressWarnings("deprecation")
 	public void decodeMergedChunks() throws IOException {
 		DataBuffer buffer = this.bufferFactory.allocateBuffer();
 		this.testMsg1.writeDelimitedTo(buffer.asOutputStream());
@@ -220,8 +221,7 @@ public class ProtobufDecoderTests extends AbstractDecoderTestCase<ProtobufDecode
 		this.decoder.setMaxMessageSize(1);
 		Mono<DataBuffer> input = dataBuffer(this.testMsg1);
 
-		testDecode(input, Msg.class, step -> step
-				.verifyError(DecodingException.class));
+		testDecode(input, Msg.class, step -> step.verifyError(DecodingException.class));
 	}
 
 	private Mono<DataBuffer> dataBuffer(Msg msg) {
@@ -232,6 +232,5 @@ public class ProtobufDecoderTests extends AbstractDecoderTestCase<ProtobufDecode
 			return buffer;
 		});
 	}
-
 
 }

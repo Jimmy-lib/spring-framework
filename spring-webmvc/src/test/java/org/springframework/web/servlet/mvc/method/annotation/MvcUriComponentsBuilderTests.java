@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,25 +22,21 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
 
-import org.joda.time.DateTime;
-import org.joda.time.format.ISODateTimeFormat;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.test.MockFilterChain;
-import org.springframework.mock.web.test.MockHttpServletRequest;
-import org.springframework.mock.web.test.MockHttpServletResponse;
-import org.springframework.mock.web.test.MockServletContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -58,6 +54,10 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.testfixture.servlet.MockFilterChain;
+import org.springframework.web.testfixture.servlet.MockHttpServletRequest;
+import org.springframework.web.testfixture.servlet.MockHttpServletResponse;
+import org.springframework.web.testfixture.servlet.MockServletContext;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -78,17 +78,18 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
  * @author Rossen Stoyanchev
  * @author Sam Brannen
  */
+@SuppressWarnings("unused")
 public class MvcUriComponentsBuilderTests {
 
 	private final MockHttpServletRequest request = new MockHttpServletRequest();
 
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(this.request));
 	}
 
-	@After
+	@AfterEach
 	public void reset() {
 		RequestContextHolder.resetRequestAttributes();
 	}
@@ -201,11 +202,10 @@ public class MvcUriComponentsBuilderTests {
 
 	@Test
 	public void fromMethodNameTwoPathVariables() {
-		DateTime now = DateTime.now();
 		UriComponents uriComponents = fromMethodName(
-				ControllerWithMethods.class, "methodWithTwoPathVariables", 1, now).build();
+				ControllerWithMethods.class, "methodWithTwoPathVariables", 1, "2009-10-31").build();
 
-		assertThat(uriComponents.getPath()).isEqualTo("/something/1/foo/" + ISODateTimeFormat.date().print(now));
+		assertThat(uriComponents.getPath()).isEqualTo("/something/1/foo/2009-10-31");
 	}
 
 	@Test
@@ -434,6 +434,20 @@ public class MvcUriComponentsBuilderTests {
 	}
 
 	@Test
+	public void fromMappingNameWithPathWithoutLeadingSlash() {
+
+		initWebApplicationContext(PathWithoutLeadingSlashConfig.class);
+
+		this.request.setServerName("example.org");
+		this.request.setServerPort(9999);
+		this.request.setContextPath("/base");
+
+		String mappingName = "PWLSC#getAddressesForCountry";
+		String url = fromMappingName(mappingName).arg(0, "DE;FR").encode().buildAndExpand("_+_");
+		assertThat(url).isEqualTo("/base/people/DE%3BFR");
+	}
+
+	@Test
 	public void fromControllerWithPrefix() {
 
 		initWebApplicationContext(PathPrefixWebConfig.class);
@@ -443,7 +457,8 @@ public class MvcUriComponentsBuilderTests {
 		this.request.setServerPort(9999);
 		this.request.setContextPath("/base");
 
-		assertThat(fromController(PersonsAddressesController.class).buildAndExpand("123").toString()).isEqualTo("https://example.org:9999/base/api/people/123/addresses");
+		assertThat(fromController(PersonsAddressesController.class).buildAndExpand("123").toString())
+				.isEqualTo("https://example.org:9999/base/api/people/123/addresses");
 	}
 
 	@Test
@@ -456,8 +471,12 @@ public class MvcUriComponentsBuilderTests {
 		this.request.setServerPort(9999);
 		this.request.setContextPath("/base");
 
-		assertThat(fromMethodCall(on(PersonsAddressesController.class).getAddressesForCountry("DE"))
-				.buildAndExpand("123").toString()).isEqualTo("https://example.org:9999/base/api/people/123/addresses/DE");
+		String url = fromMethodCall(on(PersonsAddressesController.class)
+				.getAddressesForCountry("DE"))
+				.buildAndExpand("123")
+				.toString();
+
+		assertThat(url).isEqualTo("https://example.org:9999/base/api/people/123/addresses/DE");
 	}
 
 	private void initWebApplicationContext(Class<?> configClass) {
@@ -488,6 +507,7 @@ public class MvcUriComponentsBuilderTests {
 	}
 
 
+	@Controller
 	@RequestMapping("/people/{id}/addresses")
 	static class PersonsAddressesController {
 
@@ -497,6 +517,15 @@ public class MvcUriComponentsBuilderTests {
 		}
 	}
 
+	@Controller
+	@RequestMapping({"people"})
+	static class PathWithoutLeadingSlashController {
+
+		@RequestMapping("/{country}")
+		HttpEntity<Void> getAddressesForCountry(@PathVariable String country) {
+			return null;
+		}
+	}
 
 	@RequestMapping({"/persons", "/people"})
 	private class InvalidController {
@@ -526,7 +555,7 @@ public class MvcUriComponentsBuilderTests {
 
 		@RequestMapping("/{id}/foo/{date}")
 		HttpEntity<Void> methodWithTwoPathVariables(
-				@PathVariable Integer id, @DateTimeFormat(iso = ISO.DATE) @PathVariable DateTime date) {
+				@PathVariable Integer id, @DateTimeFormat(iso = ISO.DATE) @PathVariable Date date) {
 			return null;
 		}
 
@@ -578,6 +607,7 @@ public class MvcUriComponentsBuilderTests {
 
 	static class PersonCrudController extends AbstractCrudController<Person, Long> {
 
+		@Override
 		@RequestMapping(path = "/{id}", method = RequestMethod.GET)
 		public Person get(@PathVariable Long id) {
 			return new Person();
@@ -606,6 +636,7 @@ public class MvcUriComponentsBuilderTests {
 	@Documented
 	private @interface PostJson {
 
+		@AliasFor(annotation = RequestMapping.class)
 		String[] path() default {};
 	}
 
@@ -616,6 +647,16 @@ public class MvcUriComponentsBuilderTests {
 		@Bean
 		public PersonsAddressesController controller() {
 			return new PersonsAddressesController();
+		}
+	}
+
+
+	@EnableWebMvc
+	static class PathWithoutLeadingSlashConfig implements WebMvcConfigurer {
+
+		@Bean
+		public PathWithoutLeadingSlashController controller() {
+			return new PathWithoutLeadingSlashController();
 		}
 	}
 

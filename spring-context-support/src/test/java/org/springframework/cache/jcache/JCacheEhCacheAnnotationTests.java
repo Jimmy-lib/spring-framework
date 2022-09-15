@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,26 +21,26 @@ import javax.cache.Caching;
 import javax.cache.configuration.MutableConfiguration;
 import javax.cache.spi.CachingProvider;
 
-import org.junit.After;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CachingConfigurerSupport;
+import org.springframework.cache.annotation.CachingConfigurer;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.config.AbstractCacheAnnotationTests;
-import org.springframework.cache.config.AnnotatedClassCacheableService;
-import org.springframework.cache.config.CacheableService;
-import org.springframework.cache.config.DefaultCacheableService;
-import org.springframework.cache.config.SomeCustomKeyGenerator;
 import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.cache.interceptor.SimpleKeyGenerator;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.tests.transaction.CallCountingTransactionManager;
+import org.springframework.context.testfixture.cache.AbstractCacheAnnotationTests;
+import org.springframework.context.testfixture.cache.SomeCustomKeyGenerator;
+import org.springframework.context.testfixture.cache.beans.AnnotatedClassCacheableService;
+import org.springframework.context.testfixture.cache.beans.CacheableService;
+import org.springframework.context.testfixture.cache.beans.DefaultCacheableService;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.transaction.testfixture.CallCountingTransactionManager;
 
 /**
  * @author Stephane Nicoll
@@ -64,10 +64,10 @@ public class JCacheEhCacheAnnotationTests extends AbstractCacheAnnotationTests {
 	}
 
 	protected CachingProvider getCachingProvider() {
-		return Caching.getCachingProvider("org.ehcache.jcache.JCacheCachingProvider");
+		return Caching.getCachingProvider("org.ehcache.jsr107.EhcacheCachingProvider");
 	}
 
-	@After
+	@AfterEach
 	public void shutdown() {
 		if (jCacheManager != null) {
 			jCacheManager.close();
@@ -77,34 +77,34 @@ public class JCacheEhCacheAnnotationTests extends AbstractCacheAnnotationTests {
 
 	@Override
 	@Test
-	@Ignore("Multi cache manager support to be added")
+	@Disabled("Multi cache manager support to be added")
 	public void testCustomCacheManager() {
 	}
 
 	@Test
 	public void testEvictWithTransaction() {
-		txTemplate.execute(() -> testEvict(this.cs, false));
+		txTemplate.executeWithoutResult(s -> testEvict(this.cs, false));
 	}
 
 	@Test
 	public void testEvictEarlyWithTransaction() {
-		txTemplate.execute(() -> testEvictEarly(this.cs));
+		txTemplate.executeWithoutResult(s -> testEvictEarly(this.cs));
 	}
 
 	@Test
 	public void testEvictAllWithTransaction() {
-		txTemplate.execute(() -> testEvictAll(this.cs, false));
+		txTemplate.executeWithoutResult(s -> testEvictAll(this.cs, false));
 	}
 
 	@Test
 	public void testEvictAllEarlyWithTransaction() {
-		txTemplate.execute(() -> testEvictAllEarly(this.cs));
+		txTemplate.executeWithoutResult(s -> testEvictAllEarly(this.cs));
 	}
 
 
 	@Configuration
 	@EnableCaching
-	static class EnableCachingConfig extends CachingConfigurerSupport {
+	static class EnableCachingConfig implements CachingConfigurer {
 
 		@Autowired
 		CachingProvider cachingProvider;

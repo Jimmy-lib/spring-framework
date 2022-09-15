@@ -16,12 +16,11 @@
 
 package org.springframework.orm.jpa;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceException;
-import javax.persistence.spi.PersistenceUnitInfo;
-
-import org.junit.After;
-import org.junit.Before;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.spi.PersistenceUnitInfo;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -40,12 +39,12 @@ public abstract class AbstractEntityManagerFactoryBeanTests {
 
 	protected static EntityManagerFactory mockEmf;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		mockEmf = mock(EntityManagerFactory.class);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty()).isTrue();
 		assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isFalse();
@@ -69,7 +68,7 @@ public abstract class AbstractEntityManagerFactoryBeanTests {
 
 		private static final long serialVersionUID = 1L;
 
-		private final EntityManagerFactory emf;
+		private transient final EntityManagerFactory emf;
 
 		public DummyEntityManagerFactoryBean(EntityManagerFactory emf) {
 			this.emf = emf;

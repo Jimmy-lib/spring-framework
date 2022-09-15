@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,16 +22,14 @@ import java.time.Duration;
 import java.util.Locale;
 
 import freemarker.template.Configuration;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.codec.ServerCodecConfigurer;
-import org.springframework.mock.http.server.reactive.test.MockServerHttpRequest;
-import org.springframework.mock.web.test.server.MockServerWebExchange;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.reactive.result.view.ZeroDemandResponse;
@@ -39,6 +37,8 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.adapter.DefaultServerWebExchange;
 import org.springframework.web.server.i18n.AcceptHeaderLocaleContextResolver;
 import org.springframework.web.server.session.DefaultWebSessionManager;
+import org.springframework.web.testfixture.http.server.reactive.MockServerHttpRequest;
+import org.springframework.web.testfixture.server.MockServerWebExchange;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -62,7 +62,7 @@ public class FreeMarkerViewTests {
 	private Configuration freeMarkerConfig;
 
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		this.context.refresh();
 
@@ -79,16 +79,16 @@ public class FreeMarkerViewTests {
 		FreeMarkerView view = new FreeMarkerView();
 		view.setApplicationContext(this.context);
 		view.setUrl("anythingButNull");
-		assertThatExceptionOfType(ApplicationContextException.class).isThrownBy(
-				view::afterPropertiesSet)
+		assertThatExceptionOfType(ApplicationContextException.class)
+			.isThrownBy(view::afterPropertiesSet)
 			.withMessageContaining("Must define a single FreeMarkerConfig bean");
 	}
 
 	@Test
 	public void noTemplateName() throws Exception {
 		FreeMarkerView freeMarkerView = new FreeMarkerView();
-		assertThatIllegalArgumentException().isThrownBy(
-				freeMarkerView::afterPropertiesSet)
+		assertThatIllegalArgumentException()
+			.isThrownBy(freeMarkerView::afterPropertiesSet)
 			.withMessageContaining("Property 'url' is required");
 	}
 
@@ -141,7 +141,7 @@ public class FreeMarkerViewTests {
 
 
 	private static String asString(DataBuffer dataBuffer) {
-		ByteBuffer byteBuffer = dataBuffer.asByteBuffer();
+		ByteBuffer byteBuffer = dataBuffer.toByteBuffer();
 		final byte[] bytes = new byte[byteBuffer.remaining()];
 		byteBuffer.get(bytes);
 		return new String(bytes, StandardCharsets.UTF_8);

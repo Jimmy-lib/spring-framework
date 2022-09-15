@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ public class GenericMessage<T> implements Message<T>, Serializable {
 
 	private static final long serialVersionUID = 4268801052358035098L;
 
-
+	@SuppressWarnings("serial")
 	private final T payload;
 
 	private final MessageHeaders headers;
@@ -77,15 +77,18 @@ public class GenericMessage<T> implements Message<T>, Serializable {
 	}
 
 
+	@Override
 	public T getPayload() {
 		return this.payload;
 	}
 
+	@Override
 	public MessageHeaders getHeaders() {
 		return this.headers;
 	}
 
 
+	@Override
 	public boolean equals(@Nullable Object other) {
 		if (this == other) {
 			return true;
@@ -98,21 +101,23 @@ public class GenericMessage<T> implements Message<T>, Serializable {
 		return (ObjectUtils.nullSafeEquals(this.payload, otherMsg.payload) && this.headers.equals(otherMsg.headers));
 	}
 
+	@Override
 	public int hashCode() {
 		// Using nullSafeHashCode for proper array hashCode handling
 		return (ObjectUtils.nullSafeHashCode(this.payload) * 23 + this.headers.hashCode());
 	}
 
+	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder(getClass().getSimpleName());
 		sb.append(" [payload=");
 		if (this.payload instanceof byte[]) {
-			sb.append("byte[").append(((byte[]) this.payload).length).append("]");
+			sb.append("byte[").append(((byte[]) this.payload).length).append(']');
 		}
 		else {
 			sb.append(this.payload);
 		}
-		sb.append(", headers=").append(this.headers).append("]");
+		sb.append(", headers=").append(this.headers).append(']');
 		return sb.toString();
 	}
 

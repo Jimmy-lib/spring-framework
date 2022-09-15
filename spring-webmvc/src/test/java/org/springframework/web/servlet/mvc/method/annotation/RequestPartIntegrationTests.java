@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,17 +23,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.servlet.MultipartConfigElement;
 
+import jakarta.servlet.MultipartConfigElement;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.NetworkConnector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -60,7 +60,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartResolver;
-import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -85,23 +84,15 @@ public class RequestPartIntegrationTests {
 	private static String baseUrl;
 
 
-	@BeforeClass
+	@BeforeAll
 	public static void startServer() throws Exception {
 		// Let server pick its own random, available port.
 		server = new Server(0);
 
 		ServletContextHandler handler = new ServletContextHandler();
 		handler.setContextPath("/");
-
-		Class<?> config = CommonsMultipartResolverTestConfig.class;
-		ServletHolder commonsResolverServlet = new ServletHolder(DispatcherServlet.class);
-		commonsResolverServlet.setInitParameter("contextConfigLocation", config.getName());
-		commonsResolverServlet.setInitParameter("contextClass", AnnotationConfigWebApplicationContext.class.getName());
-		handler.addServlet(commonsResolverServlet, "/commons-resolver/*");
-
-		config = StandardMultipartResolverTestConfig.class;
 		ServletHolder standardResolverServlet = new ServletHolder(DispatcherServlet.class);
-		standardResolverServlet.setInitParameter("contextConfigLocation", config.getName());
+		standardResolverServlet.setInitParameter("contextConfigLocation", StandardMultipartResolverTestConfig.class.getName());
 		standardResolverServlet.setInitParameter("contextClass", AnnotationConfigWebApplicationContext.class.getName());
 		standardResolverServlet.getRegistration().setMultipartConfig(new MultipartConfigElement(""));
 		handler.addServlet(standardResolverServlet, "/standard-resolver/*");
@@ -114,14 +105,14 @@ public class RequestPartIntegrationTests {
 		baseUrl = "http://localhost:" + connector.getLocalPort();
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void stopServer() throws Exception {
 		if (server != null) {
 			server.stop();
 		}
 	}
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		ByteArrayHttpMessageConverter emptyBodyConverter = new ByteArrayHttpMessageConverter();
 		emptyBodyConverter.setSupportedMediaTypes(Collections.singletonList(MediaType.APPLICATION_JSON));
@@ -141,12 +132,6 @@ public class RequestPartIntegrationTests {
 
 
 	@Test
-	public void commonsMultipartResolver() throws Exception {
-		testCreate(baseUrl + "/commons-resolver/test", "Jason");
-		testCreate(baseUrl + "/commons-resolver/test", "Arjen");
-	}
-
-	@Test
 	public void standardMultipartResolver() throws Exception {
 		testCreate(baseUrl + "/standard-resolver/test", "Jason");
 		testCreate(baseUrl + "/standard-resolver/test", "Arjen");
@@ -154,17 +139,16 @@ public class RequestPartIntegrationTests {
 
 	@Test  // SPR-13319
 	public void standardMultipartResolverWithEncodedFileName() throws Exception {
-		byte[] boundary = MimeTypeUtils.generateMultipartBoundary();
-		String boundaryText = new String(boundary, "US-ASCII");
+		String boundaryText = MimeTypeUtils.generateMultipartBoundaryString();
 		Map<String, String> params = Collections.singletonMap("boundary", boundaryText);
 
 		String content =
-				"--" + boundaryText + "\n" +
-				"Content-Disposition: form-data; name=\"file\"; filename*=\"utf-8''%C3%A9l%C3%A8ve.txt\"\n" +
-				"Content-Type: text/plain\n" +
-				"Content-Length: 7\n" +
-				"\n" +
-				"content\n" +
+				"--" + boundaryText + "\r\n" +
+				"Content-Disposition: form-data; name=\"file\"; filename*=\"utf-8''%C3%A9l%C3%A8ve.txt\"\r\n" +
+				"Content-Type: text/plain\r\n" +
+				"Content-Length: 7\r\n" +
+				"\r\n" +
+				"content\r\n" +
 				"--" + boundaryText + "--";
 
 		RequestEntity<byte[]> requestEntity =
@@ -202,17 +186,6 @@ public class RequestPartIntegrationTests {
 		@Bean
 		public RequestPartTestController controller() {
 			return new RequestPartTestController();
-		}
-	}
-
-
-	@Configuration
-	@SuppressWarnings("unused")
-	static class CommonsMultipartResolverTestConfig extends RequestPartTestConfig {
-
-		@Bean
-		public MultipartResolver multipartResolver() {
-			return new CommonsMultipartResolver();
 		}
 	}
 

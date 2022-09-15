@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,14 @@
 
 package org.springframework.test.web.servlet.result;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import javax.servlet.http.HttpServletResponse;
+
 import javax.xml.transform.Source;
 import javax.xml.transform.dom.DOMSource;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.hamcrest.Matcher;
 import org.w3c.dom.Node;
 
@@ -31,6 +34,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.util.AssertionErrors.assertEquals;
+import static org.springframework.test.util.AssertionErrors.assertNotNull;
 import static org.springframework.test.util.AssertionErrors.assertTrue;
 
 /**
@@ -40,6 +44,7 @@ import static org.springframework.test.util.AssertionErrors.assertTrue;
  * {@link MockMvcResultMatchers#content}.
  *
  * @author Rossen Stoyanchev
+ * @author Sam Brannen
  * @since 3.2
  */
 public class ContentResultMatchers {
@@ -61,8 +66,8 @@ public class ContentResultMatchers {
 
 	/**
 	 * Assert the ServletResponse content type. The given content type must
-	 * fully match including type, sub-type, and parameters. For checking
-	 * only the type and sub-type see {@link #contentTypeCompatibleWith(String)}.
+	 * fully match including type, subtype, and parameters. For checking
+	 * only the type and subtype see {@link #contentTypeCompatibleWith(String)}.
 	 */
 	public ResultMatcher contentType(String contentType) {
 		return contentType(MediaType.parseMediaType(contentType));
@@ -70,17 +75,15 @@ public class ContentResultMatchers {
 
 	/**
 	 * Assert the ServletResponse content type after parsing it as a MediaType.
-	 * The given content type must fully match including type, sub-type, and
-	 * parameters. For checking only the type and sub-type see
+	 * The given content type must fully match including type, subtype, and
+	 * parameters. For checking only the type and subtype see
 	 * {@link #contentTypeCompatibleWith(MediaType)}.
 	 */
 	public ResultMatcher contentType(MediaType contentType) {
 		return result -> {
 			String actual = result.getResponse().getContentType();
-			assertTrue("Content type not set", actual != null);
-			if (actual != null) {
-				assertEquals("Content type", contentType, MediaType.parseMediaType(actual));
-			}
+			assertNotNull("Content type not set", actual);
+			assertEquals("Content type", contentType, MediaType.parseMediaType(actual));
 		};
 	}
 
@@ -99,13 +102,21 @@ public class ContentResultMatchers {
 	public ResultMatcher contentTypeCompatibleWith(MediaType contentType) {
 		return result -> {
 			String actual = result.getResponse().getContentType();
-			assertTrue("Content type not set", actual != null);
-			if (actual != null) {
-				MediaType actualContentType = MediaType.parseMediaType(actual);
-				assertTrue("Content type [" + actual + "] is not compatible with [" + contentType + "]",
-						actualContentType.isCompatibleWith(contentType));
-			}
+			assertNotNull("Content type not set", actual);
+			MediaType actualContentType = MediaType.parseMediaType(actual);
+			assertTrue("Content type [" + actual + "] is not compatible with [" + contentType + "]",
+					actualContentType.isCompatibleWith(contentType));
 		};
+	}
+
+	/**
+	 * Assert the character encoding in the ServletResponse.
+	 * @since 5.3.10
+	 * @see StandardCharsets
+	 * @see #encoding(String)
+	 */
+	public ResultMatcher encoding(Charset characterEncoding) {
+		return encoding(characterEncoding.name());
 	}
 
 	/**
@@ -149,7 +160,7 @@ public class ContentResultMatchers {
 	 * are "similar" - i.e. they contain the same elements and attributes
 	 * regardless of order.
 	 * <p>Use of this matcher requires the <a
-	 * href="http://xmlunit.sourceforge.net/">XMLUnit</a> library.
+	 * href="https://www.xmlunit.org/">XMLUnit</a> library.
 	 * @param xmlContent the expected XML content
 	 * @see MockMvcResultMatchers#xpath(String, Object...)
 	 * @see MockMvcResultMatchers#xpath(String, Map, Object...)
@@ -212,7 +223,7 @@ public class ContentResultMatchers {
 	 */
 	public ResultMatcher json(String jsonContent, boolean strict) {
 		return result -> {
-			String content = result.getResponse().getContentAsString();
+			String content = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
 			this.jsonHelper.assertJsonEqual(jsonContent, content, strict);
 		};
 	}

@@ -21,15 +21,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.StubMessageChannel;
 import org.springframework.messaging.SubscribableChannel;
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
@@ -61,7 +60,7 @@ public class GenericMessagingTemplateTests {
 	private ThreadPoolTaskExecutor executor;
 
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.messageChannel = new StubMessageChannel();
 		this.template = new GenericMessagingTemplate();
@@ -112,12 +111,9 @@ public class GenericMessagingTemplateTests {
 	@Test
 	public void sendAndReceive() {
 		SubscribableChannel channel = new ExecutorSubscribableChannel(this.executor);
-		channel.subscribe(new MessageHandler() {
-			@Override
-			public void handleMessage(Message<?> message) throws MessagingException {
-				MessageChannel replyChannel = (MessageChannel) message.getHeaders().getReplyChannel();
-				replyChannel.send(new GenericMessage<>("response"));
-			}
+		channel.subscribe(message -> {
+			MessageChannel replyChannel = (MessageChannel) message.getHeaders().getReplyChannel();
+			replyChannel.send(new GenericMessage<>("response"));
 		});
 
 		String actual = this.template.convertSendAndReceive(channel, "request", String.class);
@@ -126,7 +122,7 @@ public class GenericMessagingTemplateTests {
 
 	@Test
 	public void sendAndReceiveTimeout() throws InterruptedException {
-		final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
+		final AtomicReference<Throwable> failure = new AtomicReference<>();
 		final CountDownLatch latch = new CountDownLatch(1);
 
 		this.template.setReceiveTimeout(1);
@@ -152,7 +148,7 @@ public class GenericMessagingTemplateTests {
 
 	@Test
 	public void sendAndReceiveVariableTimeout() throws InterruptedException {
-		final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
+		final AtomicReference<Throwable> failure = new AtomicReference<>();
 		final CountDownLatch latch = new CountDownLatch(1);
 
 		this.template.setSendTimeout(20_000);
@@ -182,7 +178,7 @@ public class GenericMessagingTemplateTests {
 
 	@Test
 	public void sendAndReceiveVariableTimeoutCustomHeaders() throws InterruptedException {
-		final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
+		final AtomicReference<Throwable> failure = new AtomicReference<>();
 		final CountDownLatch latch = new CountDownLatch(1);
 
 		this.template.setSendTimeout(20_000);

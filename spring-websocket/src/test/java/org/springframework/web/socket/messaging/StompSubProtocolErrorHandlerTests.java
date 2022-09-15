@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.web.socket.messaging;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
@@ -36,7 +37,7 @@ public class StompSubProtocolErrorHandlerTests {
 	private StompSubProtocolErrorHandler handler;
 
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		this.handler = new StompSubProtocolErrorHandler();
 	}
